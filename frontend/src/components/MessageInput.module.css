@@ -7,19 +7,27 @@
   width: 100%;
 }
 
-.inputRow {
+.wrapperHero {
+  max-width: 680px;
+  margin: 0;
+  width: 100%;
+}
+
+.card {
   display: flex;
   align-items: center;
   gap: 10px;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: 24px;
-  padding: 6px 6px 6px 16px;
-  transition: border-color 0.15s;
+  border-radius: 12px;
+  padding: 8px 8px 8px 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
 
-.inputRow:focus-within {
-  border-color: #565656;
+.card:focus-within {
+  border-color: #d4d4d4;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.07);
 }
 
 .textarea {
@@ -27,15 +35,18 @@
   resize: none;
   border: none;
   background: transparent;
-  padding: 10px 0;
+  padding: 0;
+  margin: 0;
   font-size: 0.9375rem;
   font-family: inherit;
   color: var(--color-text);
   outline: none;
-  line-height: 1.5;
-  max-height: 160px;
-  overflow-y: auto;
-  min-height: 24px;
+  line-height: 32px;
+  height: 32px;
+  min-height: 32px;
+  max-height: 32px;
+  overflow: hidden;
+  vertical-align: middle;
 }
 
 .textarea::placeholder {
@@ -48,19 +59,18 @@
 }
 
 .sendBtn {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   border: none;
-  background: var(--color-text);
-  color: var(--color-bg);
+  background: var(--color-accent);
+  color: #fff;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  margin-right: 2px;
-  transition: opacity 0.15s, transform 0.1s;
+  transition: opacity 0.15s, transform 0.1s, background 0.15s;
 }
 
 .sendBtn svg {
@@ -70,7 +80,7 @@
 }
 
 .sendBtn:hover:not(:disabled) {
-  opacity: 0.9;
+  background: var(--color-accent-hover);
   transform: scale(1.04);
 }
 

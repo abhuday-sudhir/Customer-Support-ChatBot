@@ -5,7 +5,7 @@ import { useChat } from './hooks/useChat'
 import './App.css'
 
 export default function App() {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [historyOpen, setHistoryOpen] = useState(false)
   const chat = useChat()
 
   return (
@@ -15,8 +15,9 @@ export default function App() {
         activeId={chat.sessionId}
         onNewChat={chat.startNewChat}
         onSelect={chat.selectConversation}
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
+        historyOpen={historyOpen}
+        onToggleHistory={() => setHistoryOpen((open) => !open)}
+        onCloseHistory={() => setHistoryOpen(false)}
       />
       <main className="main">
         <ChatWindow
@@ -26,7 +27,7 @@ export default function App() {
           error={chat.error}
           send={chat.send}
           clearError={chat.clearError}
-          onOpenSidebar={() => setSidebarOpen(true)}
+          onOpenHistory={() => setHistoryOpen(true)}
         />
       </main>
     </div>

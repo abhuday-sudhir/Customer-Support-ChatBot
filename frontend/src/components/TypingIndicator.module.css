@@ -1,6 +1,6 @@
 .row {
   display: flex;
-  gap: 16px;
+  gap: 14px;
   padding: 16px 0;
   animation: fadeUp 0.18s ease-out both;
 }
@@ -14,7 +14,7 @@
   width: 30px;
   height: 30px;
   border-radius: 8px;
-  background: linear-gradient(135deg, #10a37f 0%, #0d8c6d 100%);
+  background: var(--color-text);
   color: #fff;
   display: flex;
   align-items: center;

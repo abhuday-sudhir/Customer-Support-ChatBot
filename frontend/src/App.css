@@ -1,17 +1,18 @@
-/* ── Dark theme tokens (ChatGPT-inspired) ─────────────── */
+/* ── Light theme tokens ───────────────────────────────── */
 :root {
-  --color-bg:           #212121;
-  --color-sidebar:      #171717;
-  --color-surface:      #2f2f2f;
-  --color-hover:        #2a2a2a;
-  --color-active:       #343434;
-  --color-border:       #3a3a3a;
-  --color-text:         #ececec;
-  --color-text-muted:   #9b9b9b;
-  --color-accent:       #10a37f;
-  --color-accent-hover: #0d8c6d;
-  --color-user-bubble:  #303030;
-  --sidebar-width:      260px;
+  --color-bg:           #f5f5f5;
+  --color-sidebar:      #f5f5f5;
+  --color-surface:      #ffffff;
+  --color-hover:        #f0f0f0;
+  --color-active:       #ebebeb;
+  --color-border:       #e5e5e5;
+  --color-text:         #1a1a1a;
+  --color-text-muted:   #737373;
+  --color-accent:       #171717;
+  --color-accent-hover: #333333;
+  --color-user-bubble:  #ffffff;
+  --rail-width:         56px;
+  --drawer-width:       260px;
 
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
 }

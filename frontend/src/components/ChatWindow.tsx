@@ -3,7 +3,6 @@ import { MessageBubble } from './MessageBubble'
 import { TypingIndicator } from './TypingIndicator'
 import { MessageInput } from './MessageInput'
 import { ErrorBanner } from './ErrorBanner'
-import { RobotIcon } from './RobotIcon'
 import type { Message } from '../types'
 import styles from './ChatWindow.module.css'
 
@@ -23,7 +22,7 @@ interface Props {
   error: string | null
   send: (text: string) => Promise<void>
   clearError: () => void
-  onOpenSidebar: () => void
+  onOpenHistory: () => void
 }
 
 export function ChatWindow({
@@ -33,7 +32,7 @@ export function ChatWindow({
   error,
   send,
   clearError,
-  onOpenSidebar,
+  onOpenHistory,
 }: Props) {
   const isBusy = isSending || isLoadingHistory
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -46,12 +45,12 @@ export function ChatWindow({
 
   return (
     <div className={styles.window}>
-      <header className={styles.header}>
+      <header className={styles.topBar}>
         <button
           type="button"
           className={styles.menuBtn}
-          onClick={onOpenSidebar}
-          aria-label="Open sidebar"
+          onClick={onOpenHistory}
+          aria-label="Open chat history"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
             <line x1="3" y1="6" x2="21" y2="6" />
@@ -59,63 +58,60 @@ export function ChatWindow({
             <line x1="3" y1="18" x2="21" y2="18" />
           </svg>
         </button>
-
-        <div className={styles.headerBrand}>
-          <div className={styles.robotLogo} aria-hidden="true">
-            <RobotIcon size={22} />
-          </div>
-          <div className={styles.headerText}>
-            <h1 className={styles.title}>Customer Chat Support</h1>
-          </div>
-        </div>
-
-        <div className={styles.headerSpacer} />
       </header>
 
-      <div className={styles.messages} role="log" aria-live="polite" aria-label="Chat messages">
-        <div className={styles.messagesInner}>
-          {isEmpty && !isLoadingHistory && (
-            <div className={styles.emptyState}>
-              <div className={styles.emptyRobot} aria-hidden="true">
-                <RobotIcon size={36} />
-              </div>
-              <p className={styles.emptyTitle}>How can I help you today?</p>
-              <div className={styles.suggestions}>
-                {SUGGESTED_QUESTIONS.map((q) => (
-                  <button
-                    key={q}
-                    type="button"
-                    className={styles.suggestion}
-                    onClick={() => send(q)}
-                    disabled={isBusy}
-                  >
-                    {q}
-                  </button>
-                ))}
-              </div>
+      {isEmpty && !isLoadingHistory ? (
+        <div className={styles.hero}>
+          <div className={styles.heroInner}>
+            <h1 className={styles.heroTitle}>What can I help with?</h1>
+
+            <div className={styles.suggestions}>
+              {SUGGESTED_QUESTIONS.map((q) => (
+                <button
+                  key={q}
+                  type="button"
+                  className={styles.suggestion}
+                  onClick={() => send(q)}
+                  disabled={isBusy}
+                >
+                  {q}
+                </button>
+              ))}
             </div>
-          )}
 
-          {messages.map((msg) => (
-            <MessageBubble key={msg.id} message={msg} />
-          ))}
+            {error && <ErrorBanner message={error} onDismiss={clearError} />}
 
-          {isSending && <TypingIndicator />}
-          <div ref={bottomRef} />
+            <MessageInput
+              onSend={send}
+              disabled={isBusy}
+              maxLength={MAX_MESSAGE_LENGTH}
+              variant="hero"
+            />
+          </div>
         </div>
-      </div>
+      ) : (
+        <>
+          <div className={styles.messages} role="log" aria-live="polite" aria-label="Chat messages">
+            <div className={styles.messagesInner}>
+              {messages.map((msg) => (
+                <MessageBubble key={msg.id} message={msg} />
+              ))}
 
-      <footer className={styles.footer}>
-        {error && <ErrorBanner message={error} onDismiss={clearError} />}
-        <MessageInput
-          onSend={send}
-          disabled={isBusy}
-          maxLength={MAX_MESSAGE_LENGTH}
-        />
-        <p className={styles.disclaimer}>
-          AI can make mistakes. Verify important information.
-        </p>
-      </footer>
+              {isSending && <TypingIndicator />}
+              <div ref={bottomRef} />
+            </div>
+          </div>
+
+          <footer className={styles.footer}>
+            {error && <ErrorBanner message={error} onDismiss={clearError} />}
+            <MessageInput
+              onSend={send}
+              disabled={isBusy}
+              maxLength={MAX_MESSAGE_LENGTH}
+            />
+          </footer>
+        </>
+      )}
     </div>
   )
 }

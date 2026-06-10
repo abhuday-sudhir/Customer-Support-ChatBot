@@ -2,13 +2,11 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: rgba(220, 38, 38, 0.12);
-  border: 1px solid rgba(220, 38, 38, 0.35);
-  border-radius: 10px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 12px;
   padding: 10px 12px;
   animation: slideIn 0.2s ease-out;
-  max-width: 768px;
-  margin: 0 auto;
   width: 100%;
 }
 
@@ -20,14 +18,14 @@
 .icon {
   width: 16px;
   height: 16px;
-  color: #f87171;
+  color: #dc2626;
   flex-shrink: 0;
 }
 
 .text {
   flex: 1;
   font-size: 0.82rem;
-  color: #fca5a5;
+  color: #991b1b;
   line-height: 1.4;
 }
 
@@ -35,7 +33,7 @@
   background: none;
   border: none;
   cursor: pointer;
-  color: #fca5a5;
+  color: #991b1b;
   padding: 2px;
   display: flex;
   align-items: center;

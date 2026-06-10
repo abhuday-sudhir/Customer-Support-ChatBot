@@ -5,9 +5,10 @@ interface Props {
   onSend: (text: string) => void
   disabled: boolean
   maxLength: number
+  variant?: 'default' | 'hero'
 }
 
-export function MessageInput({ onSend, disabled, maxLength }: Props) {
+export function MessageInput({ onSend, disabled, maxLength, variant = 'default' }: Props) {
   const [value, setValue] = useState('')
 
   const handleSend = () => {
@@ -32,8 +33,8 @@ export function MessageInput({ onSend, disabled, maxLength }: Props) {
   const nearLimit = remaining < 200
 
   return (
-    <div className={styles.wrapper}>
-      <div className={styles.inputRow}>
+    <div className={`${styles.wrapper} ${variant === 'hero' ? styles.wrapperHero : ''}`}>
+      <div className={styles.card}>
         <textarea
           className={styles.textarea}
           value={value}
@@ -45,6 +46,7 @@ export function MessageInput({ onSend, disabled, maxLength }: Props) {
           rows={1}
           aria-label="Message input"
         />
+
         <button
           type="button"
           className={styles.sendBtn}
@@ -58,12 +60,13 @@ export function MessageInput({ onSend, disabled, maxLength }: Props) {
             </svg>
           ) : (
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="22" y1="2" x2="11" y2="13" />
-              <polygon points="22 2 15 22 11 13 2 9 22 2" />
+              <path d="M12 19V5" />
+              <path d="M5 12l7-7 7 7" />
             </svg>
           )}
         </button>
       </div>
+
       {nearLimit && (
         <span className={styles.counter} aria-live="polite">
           {remaining} characters remaining
