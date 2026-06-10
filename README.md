@@ -1,7 +1,7 @@
 # Spur Chat – AI Live-Chat Support Agent
 
 A full-stack mini customer support chat agent with a demo e-commerce FAQ knowledge base.  
-Built with **React + TypeScript** (frontend) and **FastAPI + Python** (backend), using **SQLite** by default and **Anthropic Claude** (or OpenAI) as the LLM.
+Built with **React + TypeScript** (frontend) and **FastAPI + Python** (backend), using **SQLite** by default and **Gemini** (or OpenAI/OpenAI) as the LLM.
 
 ---
 
