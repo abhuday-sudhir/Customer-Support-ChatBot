@@ -1,0 +1,63 @@
+.row {
+  display: flex;
+  gap: 16px;
+  padding: 16px 0;
+  animation: fadeUp 0.18s ease-out both;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.userRow {
+  justify-content: flex-end;
+}
+
+.aiRow {
+  justify-content: flex-start;
+}
+
+.avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  background: var(--color-accent);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.content {
+  flex: 1;
+  min-width: 0;
+  max-width: 85%;
+}
+
+.userRow .content {
+  flex: 0 1 auto;
+  max-width: 75%;
+}
+
+.userBubble {
+  background: var(--color-user-bubble);
+  border-radius: 18px;
+  padding: 10px 16px;
+}
+
+.text,
+.aiText {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--color-text);
+}
+
+.aiText {
+  padding-top: 4px;
+}
