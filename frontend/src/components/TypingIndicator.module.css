@@ -11,10 +11,10 @@
 }
 
 .avatar {
-  width: 28px;
-  height: 28px;
-  border-radius: 4px;
-  background: var(--color-accent);
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #10a37f 0%, #0d8c6d 100%);
   color: #fff;
   display: flex;
   align-items: center;

@@ -3,6 +3,7 @@ import { MessageBubble } from './MessageBubble'
 import { TypingIndicator } from './TypingIndicator'
 import { MessageInput } from './MessageInput'
 import { ErrorBanner } from './ErrorBanner'
+import { RobotIcon } from './RobotIcon'
 import type { Message } from '../types'
 import styles from './ChatWindow.module.css'
 
@@ -58,7 +59,16 @@ export function ChatWindow({
             <line x1="3" y1="18" x2="21" y2="18" />
           </svg>
         </button>
-        <h1 className={styles.title}>Customer Chat Support</h1>
+
+        <div className={styles.headerBrand}>
+          <div className={styles.robotLogo} aria-hidden="true">
+            <RobotIcon size={22} />
+          </div>
+          <div className={styles.headerText}>
+            <h1 className={styles.title}>Customer Chat Support</h1>
+          </div>
+        </div>
+
         <div className={styles.headerSpacer} />
       </header>
 
@@ -66,6 +76,9 @@ export function ChatWindow({
         <div className={styles.messagesInner}>
           {isEmpty && !isLoadingHistory && (
             <div className={styles.emptyState}>
+              <div className={styles.emptyRobot} aria-hidden="true">
+                <RobotIcon size={36} />
+              </div>
               <p className={styles.emptyTitle}>How can I help you today?</p>
               <div className={styles.suggestions}>
                 {SUGGESTED_QUESTIONS.map((q) => (
