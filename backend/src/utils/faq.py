@@ -5,6 +5,7 @@ The knowledge is defined here as a Python constant so it works out-of-the-box
 without any DB seed step.  The same data is also seeded into the faq_entries
 table (see db/seed.py) so it can be managed from the DB if desired.
 """
+import re
 
 STORE_NAME = "Customer Store"
 SUPPORT_EMAIL = "support@example.com"
@@ -109,6 +110,36 @@ FAQ: list[dict] = [
         ),
     },
 ]
+
+
+def _normalize(text: str) -> str:
+    text = text.lower().strip()
+    text = re.sub(r"[^\w\s]", "", text)
+    return " ".join(text.split())
+
+
+def find_faq_answer(user_text: str, faq_list: list[dict] | None = None) -> str | None:
+    """
+    Return a canned FAQ answer when the user question matches a known entry.
+    Skips the LLM for exact or close matches (e.g. suggested-question chips).
+    """
+    entries = faq_list if faq_list is not None else FAQ
+    normalized_user = _normalize(user_text)
+    if not normalized_user:
+        return None
+
+    for entry in entries:
+        if normalized_user == _normalize(entry["question"]):
+            return entry["answer"]
+
+    for entry in entries:
+        normalized_q = _normalize(entry["question"])
+        if len(normalized_user) >= 8 and (
+            normalized_user in normalized_q or normalized_q in normalized_user
+        ):
+            return entry["answer"]
+
+    return None
 
 
 def build_system_prompt(faq_list: list[dict] | None = None) -> str:

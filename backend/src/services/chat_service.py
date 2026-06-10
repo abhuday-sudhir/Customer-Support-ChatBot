@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 
 from src.models.orm import Conversation, Message, FAQEntry
 from src.services.llm_service import HistoryMessage, generate_reply, LLMError
+from src.utils.faq import find_faq_answer
 
 logger = logging.getLogger(__name__)
 
@@ -95,13 +96,18 @@ def process_message(
         if faq_rows else None
     )
 
-    # 5. Generate reply
+    # 5. Generate reply — use canned FAQ when the question matches (no LLM needed)
     ai_text: str
-    try:
-        ai_text = generate_reply(history, faq_list)
-    except LLMError as exc:
-        logger.error("LLM error for conversation %s: %s", conv.id, exc)
-        ai_text = _LLM_ERROR_FALLBACK
+    faq_answer = find_faq_answer(user_text, faq_list)
+    if faq_answer:
+        logger.info("FAQ direct match for conversation %s", conv.id)
+        ai_text = faq_answer
+    else:
+        try:
+            ai_text = generate_reply(history, faq_list)
+        except LLMError as exc:
+            logger.error("LLM error for conversation %s: %s", conv.id, exc)
+            ai_text = _LLM_ERROR_FALLBACK
 
     # 6. Persist AI reply
     ai_msg = Message(
