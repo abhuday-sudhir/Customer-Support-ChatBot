@@ -1,14 +1,37 @@
-# Spur Chat – AI Live-Chat Support Agent
+# Customer Support ChatBot – AI Live-Chat Agent
 
-A full-stack mini customer support chat agent with a demo e-commerce FAQ knowledge base.  
-Built with **React + TypeScript** (frontend) and **FastAPI + Python** (backend), using **SQLite** by default and **Gemini** (or OpenAI/OpenAI) as the LLM.
+A full-stack customer support chat agent with a demo e-commerce FAQ knowledge base.  
+Built with **React + TypeScript** (frontend) and **FastAPI + Python** (backend), using **SQLite** by default and **Google Gemini** as the LLM.
+
+## Live Demo
+
+**[https://customer-support-chatbot-ui.onrender.com/](https://customer-support-chatbot-ui.onrender.com/)**
+
+### Render free tier – please read before trying the demo
+
+This app is hosted on [Render](https://render.com/)’s **free tier**. Free web services **spin down after ~15 minutes of inactivity** and must **cold-start** when someone visits again.
+
+- The **first request after idle time can take 30–90 seconds** (sometimes longer). The page may look blank or the first message may appear to hang — this is normal.
+- If the backend is also on Render free tier, **both** the UI and API need to wake up.
+- Refresh once and wait a moment if nothing loads immediately.
+
+### Gemini API quota (important for reviewers)
+
+The live demo uses the **Google Gemini API** on the **free tier**, which is limited to roughly **20 API calls per day** for this project’s key.
+
+What that means in practice:
+
+- **FAQ shortcut:** Questions that match a known FAQ entry (including the suggested-question chips in the UI) are answered **without calling Gemini**, so they do not count against the daily limit.
+- **LLM calls:** Open-ended or paraphrased questions that do not match the FAQ use one Gemini call each.
+- Once the daily quota is exhausted, new LLM-backed messages will show a friendly error until the quota resets (typically the next UTC day).
+- When testing locally, use **your own** [Gemini API key](https://aistudio.google.com/apikey) so you are not sharing the demo quota.
 
 ---
 
 ## Project Structure
 
 ```
-spur-chat/
+Customer-Support-ChatBot/
 ├── backend/
 │   ├── main.py                   # FastAPI app entry point
 │   ├── requirements.txt
@@ -19,8 +42,8 @@ spur-chat/
 │       │   ├── chat.py           # POST /chat/message, GET /chat/history/:id
 │       │   └── health.py         # GET /health
 │       ├── services/
-│       │   ├── chat_service.py   # Business logic (persist + LLM call)
-│       │   └── llm_service.py    # Provider-agnostic LLM wrapper
+│       │   ├── chat_service.py   # Business logic (persist + FAQ match + LLM)
+│       │   └── llm_service.py    # Provider-agnostic LLM wrapper (Gemini default)
 │       ├── db/
 │       │   ├── database.py       # SQLAlchemy engine + session
 │       │   └── seed.py           # FAQ seed script
@@ -30,7 +53,7 @@ spur-chat/
 │       ├── middleware/
 │       │   └── error_handler.py  # Global exception handler
 │       └── utils/
-│           └── faq.py            # FAQ knowledge base + prompt builder
+│           └── faq.py            # FAQ knowledge base, matching & prompt builder
 └── frontend/
     ├── index.html
     ├── vite.config.ts
@@ -40,17 +63,19 @@ spur-chat/
         ├── App.tsx / App.css
         ├── main.tsx
         ├── components/
-        │   ├── ChatWindow.tsx/css   # Main chat panel
-        │   ├── MessageBubble.tsx    # Single message bubble
-        │   ├── TypingIndicator.tsx  # Animated "agent is typing"
-        │   ├── MessageInput.tsx     # Textarea + send button
-        │   └── ErrorBanner.tsx      # Error display
+        │   ├── ChatWindow.tsx    # Main chat panel
+        │   ├── Sidebar.tsx       # Conversation history sidebar
+        │   ├── MessageBubble.tsx # Single message bubble
+        │   ├── TypingIndicator.tsx
+        │   ├── MessageInput.tsx
+        │   ├── RobotIcon.tsx
+        │   └── ErrorBanner.tsx
         ├── hooks/
-        │   └── useChat.ts           # All chat state & logic
+        │   └── useChat.ts        # Chat state, session & history management
         ├── services/
-        │   └── api.ts               # HTTP calls to backend
+        │   └── api.ts            # HTTP calls to backend
         └── types/
-            └── index.ts             # Shared TypeScript types
+            └── index.ts
 ```
 
 ---
@@ -61,14 +86,15 @@ spur-chat/
 
 - **Python 3.11+**
 - **Node.js 18+**
+- A **Gemini API key** ([get one free at Google AI Studio](https://aistudio.google.com/apikey))
 
 ---
 
 ### 1. Clone & navigate
 
 ```bash
-git clone <your-repo-url>
-cd spur-chat
+git clone https://github.com/abhuday-sudhir/Customer-Support-ChatBot.git
+cd Customer-Support-ChatBot
 ```
 
 ---
@@ -87,22 +113,31 @@ pip install -r requirements.txt
 
 # Configure environment
 cp .env.example .env
-# Edit .env and set ANTHROPIC_API_KEY (or OPENAI_API_KEY + LLM_PROVIDER=openai)
 ```
 
-#### Database setup (SQLite – zero config)
+Edit `backend/.env` — minimum required for local dev:
 
-The database and tables are **created automatically on first run**.  
-The FAQ is seeded automatically too. No manual migration step required for SQLite.
+```env
+LLM_PROVIDER=gemini
+GEMINI_API_KEY=your_gemini_api_key_here
+APP_ENV=development
+CORS_ORIGINS=http://localhost:5173,http://localhost:3000
+```
 
-#### To use PostgreSQL instead
+#### Database (SQLite – zero config)
+
+Tables and FAQ seed data are **created automatically on first run**. No manual migration step is required for SQLite.
+
+#### Optional: PostgreSQL
+
+```env
+DATABASE_URL=postgresql://user:password@localhost:5432/spur_chat
+```
+
+Then create the database and run:
 
 ```bash
-# In .env:
-DATABASE_URL=postgresql://user:password@localhost:5432/spur_chat
-
-# Create the DB, then run:
-python -m src.db.seed    # seeds FAQ entries
+python -m src.db.seed
 ```
 
 #### Run the backend
@@ -111,7 +146,7 @@ python -m src.db.seed    # seeds FAQ entries
 uvicorn main:app --reload --port 8000
 ```
 
-API docs available at: http://localhost:8000/docs
+API docs: http://localhost:8000/docs
 
 ---
 
@@ -120,14 +155,12 @@ API docs available at: http://localhost:8000/docs
 ```bash
 cd ../frontend
 
-# Install dependencies
 npm install
 
-# (Optional) configure API base URL if running backend on a different host
+# Optional – only needed if the backend is not on localhost:8000
 cp .env.example .env
-# Leave VITE_API_BASE_URL blank to use the Vite dev proxy (recommended)
+# Leave VITE_API_BASE_URL blank for local dev (Vite proxies /chat and /health to :8000)
 
-# Start dev server
 npm run dev
 ```
 
@@ -135,27 +168,37 @@ Open: http://localhost:5173
 
 ---
 
-### 4. Environment Variables
+## Configuration Reference
 
-#### Backend (`backend/.env`)
+### Backend (`backend/.env`)
 
 | Variable | Required | Default | Description |
 |---|---|---|---|
-| `ANTHROPIC_API_KEY` | If using Anthropic | – | Your Anthropic API key |
-| `OPENAI_API_KEY` | If using OpenAI | – | Your OpenAI API key |
-| `LLM_PROVIDER` | No | `anthropic` | `anthropic` or `openai` |
-| `DATABASE_URL` | No | `sqlite:///./spur_chat.db` | SQLAlchemy DB URL |
-| `CORS_ORIGINS` | No | `http://localhost:5173,...` | Comma-separated allowed origins |
-| `LLM_CONTEXT_WINDOW` | No | `20` | Max prior messages sent to LLM (cost control) |
+| `LLM_PROVIDER` | No | `anthropic` | Set to `gemini` for this project (`anthropic` or `openai` also supported) |
+| `GEMINI_API_KEY` | Yes (if `gemini`) | – | Google Gemini API key |
+| `GEMINI_MODEL` | No | `gemini-2.5-flash` | Gemini model name |
+| `ANTHROPIC_API_KEY` | If using Anthropic | – | Anthropic API key |
+| `OPENAI_API_KEY` | If using OpenAI | – | OpenAI API key |
+| `DATABASE_URL` | No | `sqlite:///./spur_chat.db` | SQLAlchemy database URL |
+| `CORS_ORIGINS` | No | `http://localhost:5173,...` | Comma-separated allowed frontend origins |
+| `LLM_CONTEXT_WINDOW` | No | `20` | Max prior messages sent to the LLM (cost control) |
 | `LLM_MAX_TOKENS` | No | `512` | Max tokens per LLM reply |
 | `MAX_MESSAGE_LENGTH` | No | `2000` | Hard cap on incoming message length (chars) |
 | `APP_ENV` | No | `development` | `development` or `production` |
 
-#### Frontend (`frontend/.env`)
+### Frontend (`frontend/.env`)
 
 | Variable | Required | Default | Description |
 |---|---|---|---|
-| `VITE_API_BASE_URL` | No | `` (empty) | Backend URL for production deployments |
+| `VITE_API_BASE_URL` | No | `` (empty) | Backend URL in production (e.g. your Render backend URL). Leave blank for local dev. |
+
+### Quick configuration checklist
+
+1. **Backend:** copy `.env.example` → `.env`, set `LLM_PROVIDER=gemini` and `GEMINI_API_KEY`.
+2. **Frontend (local):** no `.env` needed — Vite proxies API calls to `localhost:8000`.
+3. **Frontend (production):** set `VITE_API_BASE_URL` to your deployed backend URL before `npm run build`.
+4. **CORS:** add your frontend origin to `CORS_ORIGINS` on the backend (e.g. `https://customer-support-chatbot-ui.onrender.com`).
+5. **Start backend first**, then frontend.
 
 ---
 
@@ -183,81 +226,114 @@ Send a user message and receive an AI reply.
 
 ### `GET /chat/history/{session_id}`
 
-Fetch full conversation history. Used on page reload.
-
-**Response:**
-```json
-{
-  "id": "550e8400-...",
-  "created_at": "2026-06-10T10:00:00Z",
-  "messages": [
-    { "id": "...", "sender": "user", "text": "...", "created_at": "..." },
-    { "id": "...", "sender": "ai",   "text": "...", "created_at": "..." }
-  ]
-}
-```
+Fetch full conversation history (used on page reload).
 
 ### `GET /health`
 
 ```json
-{ "status": "ok", "provider": "anthropic" }
+{ "status": "ok", "provider": "gemini" }
 ```
 
 ---
 
 ## Architecture Overview
 
-### Backend layers
+### Request flow
 
 ```
 HTTP Request
     │
     ▼
-routes/chat.py          ← validates input (Pydantic), routes to service
+routes/chat.py           ← validates input (Pydantic)
     │
     ▼
-services/chat_service.py ← business logic: session mgmt, DB persistence,
-    │                       history assembly, LLM delegation
+services/chat_service.py ← session mgmt, DB persistence, FAQ match check
+    │                      ├─ FAQ match? → canned answer (no LLM call)
+    │                      └─ no match   → llm_service.generate_reply()
     ▼
-services/llm_service.py  ← provider-agnostic LLM wrapper
-    │                       (Anthropic / OpenAI, error normalisation)
-    ▼
-utils/faq.py             ← FAQ knowledge base, system-prompt builder
+services/llm_service.py  ← Gemini / Anthropic / OpenAI wrapper
     │
     ▼
-db/database.py + models/orm.py  ← SQLAlchemy persistence
+utils/faq.py             ← FAQ knowledge base & system-prompt builder
+    │
+    ▼
+db/database.py           ← SQLAlchemy persistence (conversations, messages, FAQ)
 ```
 
 ### Key design decisions
 
-**Separation of concerns** – routes know nothing about the LLM; the LLM service knows nothing about the DB. Each layer has one job.
+**FAQ-first, LLM-second** – Matching FAQ questions are answered from the database without calling Gemini. This keeps the demo responsive and preserves the limited free-tier quota.
 
-**Provider-agnostic LLM interface** – `generate_reply(history, faq_list)` is the only function the rest of the app calls. Swapping providers (or adding a new one) is a single `if/elif` block in `llm_service.py`. Same pattern that would let us plug in WhatsApp/Instagram channels later.
+**Provider-agnostic LLM interface** – `generate_reply(history, faq_list)` is the only function the rest of the app calls. Swapping providers is a single branch in `llm_service.py`.
 
-**FAQ in two places** – The FAQ is hard-coded in `utils/faq.py` (always available, zero setup) and also seeded to the `faq_entries` DB table. The chat service prefers the DB rows; if the table is empty it falls back to the hard-coded list. This means the knowledge base can be managed via the DB without a code deploy.
+**FAQ in two places** – Hard-coded in `utils/faq.py` (fallback) and seeded to the `faq_entries` DB table. The chat service prefers DB rows.
 
-**Graceful error handling** – `LLMError` is the single exception type for all provider errors. It is caught in `chat_service.py` and turned into a friendly fallback message; the conversation is never left in a broken state.
+**Session & history** – `sessionId` is stored in `sessionStorage`; conversation list metadata is in `localStorage`. The sidebar lets users switch between past chats.
 
-**Cost control** – `LLM_CONTEXT_WINDOW` caps how many prior messages are sent to the LLM (default 20). `LLM_MAX_TOKENS` caps reply length (default 512). Both are env-configurable.
+**Cost control** – `LLM_CONTEXT_WINDOW` caps history sent to the LLM. FAQ direct matches skip the LLM entirely.
 
-**Session persistence** – `sessionId` is stored in `localStorage` on the client. On reload, the frontend calls `GET /chat/history/:id` and restores the full message list.
+**Graceful errors** – Provider failures (auth, rate limit, timeout) return a friendly fallback message; the conversation is never left broken.
 
 ---
 
 ## LLM Notes
 
-**Provider:** Anthropic Claude (`claude-sonnet-4-20250514` by default).  
-Switch to OpenAI by setting `LLM_PROVIDER=openai` and `OPENAI_API_KEY` in `.env`.
+**Provider (this deployment):** Google Gemini (`gemini-2.5-flash` by default).
+
+**Free-tier limit:** ~20 Gemini API calls per day on the demo key. Plan testing accordingly — use suggested FAQ questions when possible, or run locally with your own key.
 
 **Prompting strategy:**
-1. A system prompt is built from the store FAQ and injected on every call.
-2. The full conversation history (capped at `LLM_CONTEXT_WINDOW` messages) is passed so replies are contextual.
-3. The model is instructed to answer only from the provided knowledge, stay concise, and direct unknown queries to human support.
+1. A system prompt is built from the store FAQ and injected on every LLM call.
+2. Conversation history (capped at `LLM_CONTEXT_WINDOW`) is passed for context.
+3. The model is instructed to answer only from store knowledge and refuse off-topic questions.
 
-**Guardrails:**
-- All provider-specific exceptions (auth, rate-limit, timeout, connection) are caught and normalised to a friendly error message.
-- Empty messages are rejected at the Pydantic validation layer.
-- Long messages are silently truncated to `MAX_MESSAGE_LENGTH` characters rather than rejected, so the agent always responds.
+**Alternative providers:** Set `LLM_PROVIDER=anthropic` or `openai` and the matching API key in `.env`.
+
+---
+
+## Deployment (Render)
+
+The live UI is deployed at [customer-support-chatbot-ui.onrender.com](https://customer-support-chatbot-ui.onrender.com/).
+
+### Backend (Render Web Service)
+
+| Setting | Value |
+|---|---|
+| **Root directory** | `backend` |
+| **Build command** | `pip install -r requirements.txt` |
+| **Start command** | `uvicorn main:app --host 0.0.0.0 --port $PORT` |
+
+**Environment variables** (set in the Render dashboard):
+
+```
+LLM_PROVIDER=gemini
+GEMINI_API_KEY=<your-key>
+APP_ENV=production
+CORS_ORIGINS=https://customer-support-chatbot-ui.onrender.com
+DATABASE_URL=<sqlite default works on ephemeral disk; use Render PostgreSQL for persistence>
+```
+
+> **Note:** Render’s free-tier filesystem is ephemeral. SQLite data may be lost on redeploy. For persistent conversations in production, attach a PostgreSQL database and set `DATABASE_URL`.
+
+### Frontend (Render Static Site)
+
+| Setting | Value |
+|---|---|
+| **Root directory** | `frontend` |
+| **Build command** | `npm install && npm run build` |
+| **Publish directory** | `dist` |
+
+**Environment variable:**
+
+```
+VITE_API_BASE_URL=https://<your-backend-service>.onrender.com
+```
+
+### Render sleep behaviour
+
+On the **free tier**, both services sleep after inactivity. Expect slow first loads and occasional timeouts right after wake-up. Upgrading to a paid instance disables spin-down.
+
+Pushing to the connected Git branch triggers a redeploy. **README-only changes** will also trigger a rebuild if auto-deploy is enabled, but they do not change runtime behaviour.
 
 ---
 
@@ -265,37 +341,16 @@ Switch to OpenAI by setting `LLM_PROVIDER=openai` and `OPENAI_API_KEY` in `.env`
 
 | What | Trade-off / note |
 |---|---|
-| **SQLite default** | Zero setup, great for dev/demo. Would use PostgreSQL in production for connection pooling and concurrent writes. |
-| **No auth** | Not required by spec. In production, sessions would be tied to a user ID or at minimum a signed cookie. |
-| **In-memory FAQ fallback** | Convenient, but means a code deploy is needed to update FAQ if DB is empty. Ideally an admin UI would manage the `faq_entries` table. |
-| **No streaming** | Replies arrive all at once. Streaming (SSE / WebSocket) would feel much more responsive and is the natural next step. |
-| **No retry logic** | LLM errors surface immediately. Exponential back-off with 1–2 retries would improve resilience against transient rate limits. |
-| **No rate limiting** | The backend has no per-IP rate limiting. In production, add a middleware (e.g. `slowapi`) to prevent abuse. |
-| **Context window trim** | Oldest messages are simply dropped. A smarter strategy (e.g. summarise older turns) would retain more context at the same cost. |
-| **No WebSocket** | HTTP polling via individual POST requests. For a production chat product, a WebSocket or SSE channel would be used. |
+| **Gemini free tier (20 calls/day)** | Fine for a demo; production would need a paid key or heavier FAQ matching to minimise LLM usage. |
+| **Render free tier sleep** | Cold starts hurt UX; paid tier or a keep-alive ping would help. |
+| **SQLite default** | Zero setup for dev. PostgreSQL recommended on Render for persistent data. |
+| **No auth** | Sessions are anonymous. Production would tie chats to user accounts. |
+| **No streaming** | Replies arrive all at once. SSE/WebSocket would feel more responsive. |
+| **No per-IP rate limiting** | Demo quota can be exhausted by shared traffic; `slowapi` would help in production. |
+| **No retry logic** | Transient Gemini errors surface immediately; retries with back-off would help. |
 
 ---
 
-## Deployment
+## Repository
 
-### Backend (Render / Railway / Fly.io)
-
-```bash
-# Start command:
-uvicorn main:app --host 0.0.0.0 --port $PORT
-```
-
-Set all environment variables in the platform dashboard. Use a PostgreSQL add-on and set `DATABASE_URL` accordingly.
-
-### Frontend (Vercel / Netlify)
-
-```bash
-# Build command:
-npm run build
-
-# Publish directory:
-dist
-
-# Environment variable:
-VITE_API_BASE_URL=https://your-backend-url.onrender.com
-```
+https://github.com/abhuday-sudhir/Customer-Support-ChatBot
